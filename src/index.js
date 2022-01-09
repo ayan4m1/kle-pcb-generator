@@ -23,22 +23,10 @@ program
   .description('converts a KLE JSON into EAGLE scripts')
   .arguments('<input>')
   .option('-d, --diode <name>', 'Diode part name', 'tht')
-  .option('-k, --key-switch <name>', 'Keyswitch part name', 'alps')
+  .option('-k, --key-switch <name>', 'Keyswitch part name', 'mxHsPcb')
+  .option('-c, --center-switches', 'Center the switches in the schematic')
   .action(async (input, options) => {
     try {
-      const diode = diodes.get(options.diode);
-      const keySwitch = keySwitches.get(options.keySwitch);
-
-      if (!diode) {
-        return log.error('Invalid diode specified!');
-      }
-
-      if (!keySwitch) {
-        return log.error('Invalid key switch specified!');
-      }
-
-      log.info(`Using diode ${diode} and switch ${keySwitch}`);
-
       const fileName = basename(input, '.json');
       const outputSchematic = join(dirname(input), `${fileName}-schematic.scr`);
       const outputBoard = join(dirname(input), `${fileName}-board.scr`);
@@ -47,7 +35,7 @@ program
 
       const keyboard = await parseKleFile(input);
 
-      const schematicScript = getSchematicScript(keyboard, diode, keySwitch);
+      const schematicScript = getSchematicScript(keyboard, options);
       const boardScript = getBoardScript(keyboard);
 
       await writeFile(outputSchematic, schematicScript);
