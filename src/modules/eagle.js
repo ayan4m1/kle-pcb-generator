@@ -12,6 +12,11 @@ keyMap.set(']', 'RBRACKET');
 keyMap.set(';', 'SEMI');
 keyMap.set("'", 'QUOTE');
 keyMap.set('CAPS LOCK', 'CAPSLK');
+keyMap.set('NUM LOCK', 'NUMLK');
+keyMap.set('↑', 'UP');
+keyMap.set('↓', 'DOWN');
+keyMap.set('←', 'LEFT');
+keyMap.set('→', 'RIGHT');
 
 const keyWidths = [1, 2, 4, 6, 6.25, 7];
 
