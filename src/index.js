@@ -24,7 +24,6 @@ program
   .arguments('<input>')
   .option('-d, --diode <name>', 'Diode part name', 'tht')
   .option('-k, --key-switch <name>', 'Keyswitch part name', 'mxHsPcb')
-  .option('-c, --center-switches', 'Center the switches in the schematic')
   .action(async (input, options) => {
     try {
       const fileName = basename(input, '.json');

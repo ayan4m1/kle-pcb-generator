@@ -116,7 +116,7 @@ WINDOW FIT;
 
       const switchPos = [x * switchOffset[0], y * -switchOffset[1]];
 
-      if (options.centerSwitches && width > 1) {
+      if (width > 1) {
         switchPos[0] += (switchOffset[0] * (width - 1)) / 2;
       }
 
@@ -157,7 +157,7 @@ LABEL (${diodePos[0].toFixed(2)} ${(diodePos[1] + diodeSize[1] / 2).toFixed(
         const colPositions = colSwitches.get(col);
         const lastSwitchPos = colPositions[colPositions.length - 1];
 
-        if (options.centerSwitches && width > 1) {
+        if (width > 1) {
           nets.push(`
 NET COL${col} (${(x * switchOffset[0] - 0.1 - switchSize[0] / 2).toFixed(2)} ${(
             switchPos[1] + 0.1
