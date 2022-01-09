@@ -4,16 +4,22 @@ This is a Node script which can transform JSON files from Keyboard-Layout-Editor
 
 ## features
 
- * SMD or THT diodes
- * Alps, Alps-MX, Choc, Choc X, or Hotswap switches
- * Variable width/height keys
- * Stabilizers for >= 2U keys
- * Traditional or duplex matrix wiring
+- SMD or THT diodes
+- Alps, Alps-MX, Choc, Choc X, or Hotswap switches
+- Variable width/height keys
+- Stabilizers for >= 2U keys
+- Traditional or duplex matrix wiring
 
 ## not supported
 
- * Rotated keys
- * Stepped keys (ISO enter)
+- Rotated keys
+- Stepped keys (ISO enter)
+
+## prerequisites
+
+- [Node.JS 16](https://nodejs.org/download/release/latest-gallium/)
+- [Clueboard Eagle libraries](https://github.com/clueboard/eagle_libs)
+- Autodesk EAGLE
 
 ## usage
 
