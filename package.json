@@ -9,6 +9,9 @@
     "start": "node src/index.js"
   },
   "dependencies": {
+    "@ijprest/kle-serial": "^0.15.1",
+    "commander": "^8.3.0",
+    "jsonfile": "^6.1.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
