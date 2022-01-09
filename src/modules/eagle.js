@@ -139,7 +139,7 @@ NET ROW${row} (${diodePos[0].toFixed(2)} ${(
           diodePos[1] +
           diodeSize[1] / 2
         ).toFixed(2)})
-          `);
+`);
         rowPositions.push(diodePos);
       } else {
         rowSwitches.set(row, [diodePos]);
