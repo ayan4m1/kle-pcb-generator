@@ -17,6 +17,8 @@ keyMap.set('↑', 'UP');
 keyMap.set('↓', 'DOWN');
 keyMap.set('←', 'LEFT');
 keyMap.set('→', 'RIGHT');
+keyMap.set('*', 'ASTERISK');
+keyMap.set('#', 'HASH');
 
 const keyWidths = [1, 2, 4, 6, 6.25, 7];
 
