@@ -151,7 +151,7 @@ LABEL (${diodePos[0].toFixed(2)} ${(diodePos[1] + diodeSize[1] / 2).toFixed(
           diodePos[1] +
           0.1 +
           diodeSize[1] / 2
-        ).toFixed(2)})
+        ).toFixed(2)});
 `);
       }
 
@@ -167,14 +167,14 @@ NET COL${col} (${(x * switchOffset[0] - 0.1 - switchSize[0] / 2).toFixed(2)} ${(
             x * switchOffset[0] -
             0.1 -
             switchSize[0] / 2
-          ).toFixed(2)} ${(lastSwitchPos[1] + 0.1).toFixed(2)})
+          ).toFixed(2)} ${(lastSwitchPos[1] + 0.1).toFixed(2)});
 `);
           nets.push(`
 NET COL${col} (${(x * switchOffset[0] - 0.1 - switchSize[0] / 2).toFixed(2)} ${(
             switchPos[1] + 0.1
           ).toFixed(2)}) (${(switchPos[0] - 0.1).toFixed(2)} ${(
             switchPos[1] + 0.1
-          ).toFixed(2)})
+          ).toFixed(2)});
 `);
         } else {
           nets.push(`
@@ -182,7 +182,7 @@ NET COL${col} (${(switchPos[0] - 0.1 - switchSize[0] / 2).toFixed(2)} ${(
             switchPos[1] + 0.1
           ).toFixed(2)}) (${(switchPos[0] - 0.1 - switchSize[0] / 2).toFixed(
             2
-          )} ${(lastSwitchPos[1] + 0.1).toFixed(2)})
+          )} ${(lastSwitchPos[1] + 0.1).toFixed(2)});
 `);
         }
         colPositions.push(switchPos);
@@ -196,7 +196,7 @@ LABEL (${(switchPos[0] - 0.1 - switchSize[0] / 2).toFixed(
           switchPos[0] -
           0.2 -
           switchSize[0] / 2
-        ).toFixed(2)} ${switchPos[1].toFixed(2)})
+        ).toFixed(2)} ${switchPos[1].toFixed(2)});
 `);
       }
 
