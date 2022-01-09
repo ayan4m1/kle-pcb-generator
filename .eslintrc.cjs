@@ -1,22 +1,20 @@
 module.exports = {
-  "env": {
-    "es2020": true,
-    
-    "node": true
+  env: {
+    es2020: true,
+    node: true
   },
-  "extends": [
-    "eslint:recommended",
-    
-    "plugin:prettier/recommended",
-    "plugin:import/recommended"
+  extends: [
+    'eslint:recommended',
+    'plugin:prettier/recommended',
+    'plugin:import/recommended'
   ],
-  "parser": "@babel/eslint-parser",
-  "parserOptions": {
-    "requireConfigFile": false,
-    "ecmaVersion": 12
+  parser: '@babel/eslint-parser',
+  parserOptions: {
+    requireConfigFile: false,
+    ecmaVersion: 12
   },
-  "settings": {
-    "import/resolver": {
+  settings: {
+    'import/resolver': {
       node: {
         paths: ['./src']
       }
