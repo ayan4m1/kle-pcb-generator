@@ -232,8 +232,8 @@ ${nets.join('')}`;
 };
 
 export const getBoardScript = (keyboard) => {
-  // const diodeOffset = [];
-  // const switchOffset = [19.05, 19.05];
+  const diodeOffset = [-10, 2];
+  const switchOffset = [19.05, 19.05];
 
   if (!keyboard.keys.length) {
     throw new Error('No keys on keyboard!');
@@ -241,21 +241,50 @@ export const getBoardScript = (keyboard) => {
 
   const preamble = `
 GRID ON;
-GRID MM 1 10;
+GRID MM 0.79375 24;
 GRID ALT MM .1;
 `;
 
+  const labelMap = new Map();
+
   const main = keyboard.keys
     .map((key) => {
-      const label = getLabel(key);
+      let label = getLabel(key);
+
+      if (!labelMap.has(label)) {
+        labelMap.set(label, 1);
+      } else {
+        const index = labelMap.get(label) + 1;
+
+        label = `${label}${index}`;
+        labelMap.set(label, index);
+      }
+
+      const { x, y, width, height } = key;
+      const switchPos = [x * switchOffset[0], y * -switchOffset[1]];
+
+      if (width > 1) {
+        switchPos[0] += (switchOffset[0] * (width - 1)) / 2;
+      }
+
+      if (height > 1) {
+        switchPos[1] -= (switchOffset[1] * (height - 1)) / 2;
+      }
+
+      const diodePos = [
+        switchPos[0] - (width * 19.05) / 2,
+        switchPos[1] + diodeOffset[1]
+      ];
 
       return `
-ROTATE R180 ${label};
-MOVE ${label} (0 0);
-ROTATE R270 D${label};
-MOVE D${label} (0 0);`;
+ROTATE =R0 ${label};
+MIRROR ${label};
+MOVE ${label} (${switchPos[0].toFixed(2)} ${switchPos[1].toFixed(2)});
+ROTATE =R90 D${label};
+MOVE D${label} (${diodePos[0].toFixed(2)} ${diodePos[1].toFixed(2)});
+`;
     })
-    .join('\n');
+    .join('');
 
   const footer = `
 RATSNEST;
