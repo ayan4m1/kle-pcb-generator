@@ -118,8 +118,12 @@ WINDOW FIT;
 
       const switchPos = [x * switchOffset[0], y * -switchOffset[1]];
 
-      if (width > 1) {
+      if (options.centerSwitches && width > 1) {
         switchPos[0] += (switchOffset[0] * (width - 1)) / 2;
+      }
+
+      if (options.centerSwitches && height > 1) {
+        switchPos[1] -= (switchOffset[1] * (height - 1)) / 2;
       }
 
       const diodePos = [
@@ -131,15 +135,33 @@ WINDOW FIT;
         const rowPositions = rowSwitches.get(row);
         const lastDiodePos = rowPositions[rowPositions.length - 1];
 
-        nets.push(`
+        if (lastDiodePos[1] !== diodePos[1]) {
+          nets.push(`
 NET ROW${row} (${diodePos[0].toFixed(2)} ${(
-          diodePos[1] +
-          diodeSize[1] / 2
-        ).toFixed(2)}) (${lastDiodePos[0].toFixed(2)} ${(
-          diodePos[1] +
-          diodeSize[1] / 2
-        ).toFixed(2)})
+            lastDiodePos[1] +
+            diodeSize[1] / 2
+          ).toFixed(2)}) (${lastDiodePos[0].toFixed(2)} ${(
+            lastDiodePos[1] +
+            diodeSize[1] / 2
+          ).toFixed(2)})
 `);
+          nets.push(`
+NET ROW${row} (${diodePos[0].toFixed(2)} ${(
+            lastDiodePos[1] +
+            diodeSize[1] / 2
+          ).toFixed(2)}) (${diodePos[0].toFixed(2)} ${diodePos[1].toFixed(2)})
+`);
+        } else {
+          nets.push(`
+NET ROW${row} (${diodePos[0].toFixed(2)} ${(
+            diodePos[1] +
+            diodeSize[1] / 2
+          ).toFixed(2)}) (${lastDiodePos[0].toFixed(2)} ${(
+            diodePos[1] +
+            diodeSize[1] / 2
+          ).toFixed(2)})
+`);
+        }
         rowPositions.push(diodePos);
       } else {
         rowSwitches.set(row, [diodePos]);
@@ -159,23 +181,15 @@ LABEL (${diodePos[0].toFixed(2)} ${(diodePos[1] + diodeSize[1] / 2).toFixed(
         const colPositions = colSwitches.get(col);
         const lastSwitchPos = colPositions[colPositions.length - 1];
 
-        if (width > 1) {
+        if (lastSwitchPos[0] !== switchPos[0]) {
           nets.push(`
-NET COL${col} (${(x * switchOffset[0] - 0.1 - switchSize[0] / 2).toFixed(2)} ${(
+NET COL${col} (${(switchPos[0] - 0.1 - switchSize[0] / 2).toFixed(2)} ${(
             switchPos[1] + 0.1
           ).toFixed(2)}) (${(
-            x * switchOffset[0] -
+            lastSwitchPos[0] -
             0.1 -
             switchSize[0] / 2
-          ).toFixed(2)} ${(lastSwitchPos[1] + 0.1).toFixed(2)});
-`);
-          nets.push(`
-NET COL${col} (${(x * switchOffset[0] - 0.1 - switchSize[0] / 2).toFixed(2)} ${(
-            switchPos[1] + 0.1
-          ).toFixed(2)}) (${(switchPos[0] - 0.1).toFixed(2)} ${(
-            switchPos[1] + 0.1
-          ).toFixed(2)});
-`);
+          ).toFixed(2)} ${(lastSwitchPos[1] + 0.1).toFixed(2)})`);
         } else {
           nets.push(`
 NET COL${col} (${(switchPos[0] - 0.1 - switchSize[0] / 2).toFixed(2)} ${(
@@ -232,8 +246,8 @@ ${nets.join('')}`;
 };
 
 export const getBoardScript = (keyboard) => {
-  const diodeOffset = [-10, 2];
-  const switchOffset = [19.05, 19.05];
+  const diodeOffset = 2;
+  const switchOffset = 19.05;
 
   if (!keyboard.keys.length) {
     throw new Error('No keys on keyboard!');
@@ -261,19 +275,19 @@ GRID ALT MM .1;
       }
 
       const { x, y, width, height } = key;
-      const switchPos = [x * switchOffset[0], y * -switchOffset[1]];
+      const switchPos = [x * switchOffset, y * -switchOffset];
 
       if (width > 1) {
-        switchPos[0] += (switchOffset[0] * (width - 1)) / 2;
+        switchPos[0] += (switchOffset * (width - 1)) / 2;
       }
 
       if (height > 1) {
-        switchPos[1] -= (switchOffset[1] * (height - 1)) / 2;
+        switchPos[1] -= (switchOffset * (height - 1)) / 2;
       }
 
       const diodePos = [
-        switchPos[0] - (width * 19.05) / 2,
-        switchPos[1] + diodeOffset[1]
+        switchPos[0] - (width * switchOffset) / 2,
+        switchPos[1] + diodeOffset
       ];
 
       return `
