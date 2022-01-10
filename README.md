@@ -14,6 +14,7 @@ This is a Node script which can transform JSON files from Keyboard-Layout-Editor
 
 - Rotated keys
 - Stepped keys (ISO enter)
+- MCU placement/wiring
 
 ## prerequisites
 
@@ -38,3 +39,21 @@ node src/index.js example.json
 Where example.json is a KLE JSON file in the same directory.
 
 To get a list of the diodes and switches you can use, run `node src/index.js parts`.
+
+## examples
+
+Here is a numpad schematic:
+
+![numpad schematic](./examples/numpad-schematic.png)
+
+And the matching board layout:
+
+![numpad board](./examples/numpad-board.png)
+
+Here is a 69-key keyboard schematic:
+
+![69 schematic](./examples/69-schematic.png)
+
+And the matching board layout:
+
+![69 board](./examples/69-board.png)
