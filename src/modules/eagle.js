@@ -149,7 +149,10 @@ NET ROW${row} (${diodePos[0].toFixed(2)} ${(
 NET ROW${row} (${diodePos[0].toFixed(2)} ${(
             lastDiodePos[1] +
             diodeSize[1] / 2
-          ).toFixed(2)}) (${diodePos[0].toFixed(2)} ${diodePos[1].toFixed(2)})
+          ).toFixed(2)}) (${diodePos[0].toFixed(2)} ${(
+            diodePos[1] +
+            diodeSize[1] / 2
+          ).toFixed(2)})
 `);
         } else {
           nets.push(`
