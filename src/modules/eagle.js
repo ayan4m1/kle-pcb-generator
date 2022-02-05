@@ -11,6 +11,7 @@ keyMap.set('[', 'LBRACKET');
 keyMap.set(']', 'RBRACKET');
 keyMap.set(';', 'SEMI');
 keyMap.set("'", 'QUOTE');
+keyMap.set('SCROLL LOCK', 'SCRLK');
 keyMap.set('CAPS LOCK', 'CAPSLK');
 keyMap.set('NUM LOCK', 'NUMLK');
 keyMap.set('↑', 'UP');
