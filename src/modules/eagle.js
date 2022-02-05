@@ -38,7 +38,7 @@ keySwitches.set('mx', 'MX');
 keySwitches.set('mxHs', 'MXHS');
 keySwitches.set('mxHsPcb', 'MXHSPCB');
 
-const getLabel = (key) => {
+const getLabel = (key, labels) => {
   if (!key.labels.length) {
     if (key.width >= 3) {
       return 'SPACE';
@@ -51,6 +51,15 @@ const getLabel = (key) => {
 
   if (keyMap.has(label)) {
     label = keyMap.get(label);
+  }
+
+  if (!labels.has(label)) {
+    labels.set(label, 1);
+  } else {
+    const index = labels.get(label) + 1;
+
+    label = `${label}${index}`;
+    labels.set(label, index);
   }
 
   return label;
@@ -95,17 +104,7 @@ WINDOW FIT;
 
   const main = keyboard.keys
     .map((key) => {
-      let label = getLabel(key);
-
-      if (!labelMap.has(label)) {
-        labelMap.set(label, 1);
-      } else {
-        const index = labelMap.get(label) + 1;
-
-        label = `${label}${index}`;
-        labelMap.set(label, index);
-      }
-
+      const label = getLabel(key, labelMap);
       const { x, y, width, height } = key;
       const row = Math.floor(y) + 1;
       const col = Math.floor(x) + 1;
@@ -117,6 +116,7 @@ WINDOW FIT;
         keyWidth = Math.floor(width);
       }
 
+      // figure out switch position
       const switchPos = [x * switchOffset[0], y * -switchOffset[1]];
 
       if (options.centerSwitches && width > 1) {
@@ -127,16 +127,19 @@ WINDOW FIT;
         switchPos[1] -= (switchOffset[1] * (height - 1)) / 2;
       }
 
+      // figure out diode position
       const diodePos = [
         switchPos[0] + diodeOffset[0],
         switchPos[1] + diodeOffset[1]
       ];
 
       if (rowSwitches.has(row)) {
+        // if row already has a switch, connect to its diode
         const rowPositions = rowSwitches.get(row);
         const lastDiodePos = rowPositions[rowPositions.length - 1];
 
         if (lastDiodePos[1] !== diodePos[1]) {
+          // continuing the row
           nets.push(`
 NET ROW${row} (${diodePos[0].toFixed(2)} ${(
             lastDiodePos[1] +
@@ -168,6 +171,7 @@ NET ROW${row} (${diodePos[0].toFixed(2)} ${(
         }
         rowPositions.push(diodePos);
       } else {
+        // starting the row
         rowSwitches.set(row, [diodePos]);
 
         labels.push(`
@@ -264,20 +268,9 @@ GRID ALT MM .1;
 `;
 
   const labelMap = new Map();
-
   const main = keyboard.keys
     .map((key) => {
-      let label = getLabel(key);
-
-      if (!labelMap.has(label)) {
-        labelMap.set(label, 1);
-      } else {
-        const index = labelMap.get(label) + 1;
-
-        label = `${label}${index}`;
-        labelMap.set(label, index);
-      }
-
+      const label = getLabel(key, labelMap);
       const { x, y, width, height } = key;
       const switchPos = [x * switchOffset, y * -switchOffset];
 
