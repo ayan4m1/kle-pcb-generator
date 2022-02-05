@@ -25,6 +25,7 @@ program
   .option('-d, --diode <name>', 'Diode part name', 'tht')
   .option('-k, --key-switch <name>', 'Keyswitch part name', 'mxHsPcb')
   .option('-c, --center-switches', 'Center switches in schematic')
+  .option('-d, --duplex, --duplex-matrix', 'Generate duplex matrix')
   .action(async (input, options) => {
     try {
       const fileName = basename(input, '.json');
