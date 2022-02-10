@@ -62,8 +62,8 @@ const getLabel = (key, labels) => {
   } else {
     const index = labels.get(label) + 1;
 
-    label = `${label}${index}`;
     labels.set(label, index);
+    label = `${label}${index}`;
   }
 
   return label;
