@@ -1,5 +1,6 @@
 const keyMap = new Map();
 
+// remap keys with symbol/long names when generating part names
 keyMap.set('-', 'DASH');
 keyMap.set('=', 'EQUAL');
 keyMap.set('+', 'PLUS');
@@ -21,15 +22,18 @@ keyMap.set('→', 'RIGHT');
 keyMap.set('*', 'ASTERISK');
 keyMap.set('#', 'HASH');
 
+// keys that we have socket/stabilizer patterns for
 const keyWidths = [1, 2, 4, 6, 6.25, 7];
 
 export const diodes = new Map();
 
+// EAGLE library diode types
 diodes.set('tht', 'DIODE-DO-35');
 diodes.set('smd', 'DIODE-SOD-123');
 
 export const keySwitches = new Map();
 
+// EAGLE library switch mount types
 keySwitches.set('alps', 'ALPS');
 keySwitches.set('alpsMx', 'ALPSMX');
 keySwitches.set('choc', 'CHOC');
@@ -65,7 +69,123 @@ const getLabel = (key, labels) => {
   return label;
 };
 
-export const getSchematicScript = (keyboard, options) => {
+const offsets = {
+  diode: {
+    schematic: [0.1, 0.7],
+    board: 2
+  },
+  switch: {
+    schematic: [1, 1.7],
+    board: 19.05
+  }
+};
+
+const sizes = {
+  diode: [0.2, 0.4],
+  switch: [0.6, 0.6]
+};
+
+const calcPositions = ({ x, y, width, height }, options) => {
+  const positions = {
+    switch: {
+      board: [x * offsets.switch.board, y * -offsets.switch.board],
+      schematic: [
+        x * offsets.switch.schematic[0],
+        y * -offsets.switch.schematic[1]
+      ]
+    }
+  };
+
+  positions.diode = {
+    board: [
+      positions.switch.board[0] - (width * offsets.switch.board) / 2,
+      positions.switch.board[1] + offsets.diode.board
+    ],
+    schematic: [
+      positions.switch.schematic[0] + offsets.diode.schematic[0],
+      positions.switch.schematic[1] + offsets.diode.schematic[1]
+    ]
+  };
+
+  if (options.centerSwitches && width > 1) {
+    positions.switch.schematic[0] +=
+      (offsets.switch.schematic[0] * (width - 1)) / 2;
+  }
+
+  if (options.centerSwitches && height > 1) {
+    positions.switch.schematic[1] -=
+      (offsets.switch.schematic[1] * (height - 1)) / 2;
+  }
+
+  positions.switch.schematic[0] = parseFloat(
+    positions.switch.schematic[0].toPrecision(2)
+  );
+  positions.switch.schematic[1] = parseFloat(
+    positions.switch.schematic[1].toPrecision(2)
+  );
+
+  if (width > 1) {
+    positions.switch.board[0] += (offsets.switch.board * (width - 1)) / 2;
+  }
+
+  if (height > 1) {
+    positions.switch.board[1] -= (offsets.switch.board * (height - 1)) / 2;
+  }
+
+  return positions;
+};
+
+const coords = ([x, y]) => `(${x.toFixed(2)} ${y.toFixed(2)})`;
+
+const generateSwitch = (keySwitch, height, width, label, position) => {
+  let keyWidth = width;
+
+  if (!keyWidths.includes(width)) {
+    keyWidth = Math.floor(width);
+  }
+
+  let suffix = '';
+
+  if (height > 1) {
+    keyWidth = height;
+    suffix = '-ROTATED';
+  }
+
+  return `
+ADD KEYSWITCH-PLAIN-${keySwitch}-${keyWidth}U${suffix} ${label} ${coords(
+    position
+  )};
+`;
+};
+
+const generateDiode = (diode, label, position) => `
+ADD ${diode} D${label} R90 ${coords(position)};
+`;
+
+const generateLabel = (netPosition, rotation, position) => `
+LABEL ${coords(netPosition)} R${rotation} ${coords(position)};
+`;
+
+const generateNet = (name, start, end) => `
+NET ${name} ${coords(start)} ${coords(end)};
+`;
+
+const placeSwitch = (label, position) => `
+ROTATE =R0 ${label};
+MIRROR ${label};
+MOVE ${label} ${coords(position)};
+`;
+
+const placeDiode = (label, position) => `
+ROTATE =R90 D${label};
+MOVE D${label} ${coords(position)};
+`;
+
+export const parseLayout = (keyboard, options) => {
+  if (!keyboard.keys.length) {
+    throw new Error('No keys on keyboard!');
+  }
+
   const diode = diodes.get(options.diode);
   const keySwitch = keySwitches.get(options.keySwitch);
 
@@ -77,16 +197,24 @@ export const getSchematicScript = (keyboard, options) => {
     throw new Error('Invalid key switch specified!');
   }
 
-  if (!keyboard.keys.length) {
-    throw new Error('No keys on keyboard!');
-  }
+  const labelMap = new Map();
+  const keys = keyboard.keys.map((key) => {
+    return {
+      key,
+      label: getLabel(key, labelMap),
+      positions: calcPositions(key, options)
+    };
+  });
 
-  const diodeOffset = [0.1, 0.7];
-  const switchOffset = [1, 1.7];
-  const diodeSize = [0.2, 0.4];
-  const switchSize = [0.6, 0.6];
+  return {
+    keys,
+    diode,
+    keySwitch
+  };
+};
 
-  const preamble = `
+export const getSchematicScript = ({ keys, diode, keySwitch }) => {
+  const header = `
 GRID ON;
 GRID IN 0.1 1;
 GRID ALT IN 0.01;
@@ -97,204 +225,133 @@ SET WIRE_BEND 2;
 WINDOW FIT;
 `;
 
-  const labelMap = new Map();
+  const switches = keys
+    .map(({ label, key: { height, width }, positions }) =>
+      generateSwitch(
+        keySwitch,
+        height,
+        width,
+        label,
+        positions.switch.schematic
+      )
+    )
+    .join('');
+  const diodes = keys
+    .map(({ label, positions }) =>
+      generateDiode(diode, label, positions.diode.schematic)
+    )
+    .join('');
+
   const rowSwitches = new Map();
   const colSwitches = new Map();
-  const labels = [];
 
-  const main = keyboard.keys
-    .map((key) => {
-      const label = getLabel(key, labelMap);
-      const { x, y, width, height } = key;
+  const labels = [];
+  const nets = keys
+    .flatMap(({ key: { x, y }, positions }) => {
+      const lines = [];
       const row = Math.floor(y) + 1;
       const col = Math.floor(x) + 1;
-      const nets = [];
-
-      let keyWidth = width;
-
-      if (!keyWidths.includes(width)) {
-        keyWidth = Math.floor(width);
-      }
-
-      // figure out switch position
-      const switchPos = [x * switchOffset[0], y * -switchOffset[1]];
-
-      if (options.centerSwitches && width > 1) {
-        switchPos[0] += (switchOffset[0] * (width - 1)) / 2;
-      }
-
-      if (options.centerSwitches && height > 1) {
-        switchPos[1] -= (switchOffset[1] * (height - 1)) / 2;
-      }
-
-      // figure out diode position
-      const diodePos = [
-        switchPos[0] + diodeOffset[0],
-        switchPos[1] + diodeOffset[1]
-      ];
+      const switchPos = positions.switch.schematic;
+      const diodePos = positions.diode.schematic;
 
       if (rowSwitches.has(row)) {
-        // if row already has a switch, connect to its diode
         const rowPositions = rowSwitches.get(row);
         const lastDiodePos = rowPositions[rowPositions.length - 1];
+        const netName = `ROW${row}`;
+
+        rowPositions.push(diodePos);
 
         if (lastDiodePos[1] !== diodePos[1]) {
-          // continuing the row
-          nets.push(`
-NET ROW${row} (${diodePos[0].toFixed(2)} ${(
-            lastDiodePos[1] +
-            diodeSize[1] / 2
-          ).toFixed(2)}) (${lastDiodePos[0].toFixed(2)} ${(
-            lastDiodePos[1] +
-            diodeSize[1] / 2
-          ).toFixed(2)})
-`);
-          nets.push(`
-NET ROW${row} (${diodePos[0].toFixed(2)} ${(
-            lastDiodePos[1] +
-            diodeSize[1] / 2
-          ).toFixed(2)}) (${diodePos[0].toFixed(2)} ${(
-            diodePos[1] +
-            diodeSize[1] / 2
-          ).toFixed(2)})
-`);
+          lines.push(
+            generateNet(
+              netName,
+              [diodePos[0], lastDiodePos[1] + sizes.diode[1] / 2],
+              [lastDiodePos[0], lastDiodePos[1] + sizes.diode[1] / 2]
+            ),
+            generateNet(
+              netName,
+              [diodePos[0], lastDiodePos[1] + sizes.diode[1] / 2],
+              [diodePos[0], diodePos[1] + sizes.diode[1] / 2]
+            )
+          );
         } else {
-          nets.push(`
-NET ROW${row} (${diodePos[0].toFixed(2)} ${(
-            diodePos[1] +
-            diodeSize[1] / 2
-          ).toFixed(2)}) (${lastDiodePos[0].toFixed(2)} ${(
-            diodePos[1] +
-            diodeSize[1] / 2
-          ).toFixed(2)})
-`);
+          lines.push(
+            generateNet(
+              netName,
+              [diodePos[0], diodePos[1] + sizes.diode[1] / 2],
+              [lastDiodePos[0], diodePos[1] + sizes.diode[1] / 2]
+            )
+          );
         }
-        rowPositions.push(diodePos);
       } else {
-        // starting the row
         rowSwitches.set(row, [diodePos]);
 
-        labels.push(`
-LABEL (${diodePos[0].toFixed(2)} ${(diodePos[1] + diodeSize[1] / 2).toFixed(
-          2
-        )}) R0 (${diodePos[0].toFixed(2)} ${(
-          diodePos[1] +
-          0.1 +
-          diodeSize[1] / 2
-        ).toFixed(2)});
-`);
+        labels.push(
+          generateLabel([diodePos[0], diodePos[1] + sizes.diode[1] / 2], 0, [
+            diodePos[0],
+            diodePos[1] + 0.1 + sizes.diode[1] / 2
+          ])
+        );
       }
 
       if (colSwitches.has(col)) {
         const colPositions = colSwitches.get(col);
         const lastSwitchPos = colPositions[colPositions.length - 1];
+        const netName = `COL${col}`;
+
+        colPositions.push(switchPos);
 
         if (lastSwitchPos[0] !== switchPos[0]) {
-          nets.push(`
-NET COL${col} (${(switchPos[0] - 0.1 - switchSize[0] / 2).toFixed(2)} ${(
-            switchPos[1] + 0.1
-          ).toFixed(2)}) (${(
-            lastSwitchPos[0] -
-            0.1 -
-            switchSize[0] / 2
-          ).toFixed(2)} ${(lastSwitchPos[1] + 0.1).toFixed(2)})`);
+          lines.push(
+            generateNet(
+              netName,
+              [switchPos[0] - 0.1 - sizes.switch[0] / 2, switchPos[1] + 0.1],
+              [
+                lastSwitchPos[0] - 0.1 - sizes.switch[0] / 2,
+                lastSwitchPos[1] + 0.1
+              ]
+            )
+          );
         } else {
-          nets.push(`
-NET COL${col} (${(switchPos[0] - 0.1 - switchSize[0] / 2).toFixed(2)} ${(
-            switchPos[1] + 0.1
-          ).toFixed(2)}) (${(switchPos[0] - 0.1 - switchSize[0] / 2).toFixed(
-            2
-          )} ${(lastSwitchPos[1] + 0.1).toFixed(2)});
-`);
+          lines.push(
+            generateNet(
+              netName,
+              [switchPos[0] - 0.1 - sizes.switch[0] / 2, switchPos[1] + 0.1],
+              [switchPos[0] - 0.1 - sizes.switch[0] / 2, lastSwitchPos[1] + 0.1]
+            )
+          );
         }
-        colPositions.push(switchPos);
       } else {
         colSwitches.set(col, [switchPos]);
 
-        labels.push(`
-LABEL (${(switchPos[0] - 0.1 - switchSize[0] / 2).toFixed(
-          2
-        )} ${switchPos[1].toFixed(2)}) R270 (${(
-          switchPos[0] -
-          0.2 -
-          switchSize[0] / 2
-        ).toFixed(2)} ${switchPos[1].toFixed(2)});
-`);
+        labels.push(
+          generateLabel(
+            [switchPos[0] - 0.1 - sizes.switch[0] / 2, switchPos[1]],
+            270,
+            [switchPos[0] - 0.2 - sizes.switch[0] / 2, switchPos[1]]
+          )
+        );
       }
 
-      nets.push(`
-NET (${diodePos[0].toFixed(2)} ${(diodePos[1] - diodeSize[1] / 2).toFixed(
-        2
-      )}) (${diodePos[0].toFixed(2)} ${(
-        diodePos[1] -
-        0.1 -
-        diodeSize[1] / 2
-      ).toFixed(2)});
-`);
-
-      let suffix = '';
-
-      if (height > 1) {
-        keyWidth = height;
-        suffix = '-ROTATED';
-      }
-
-      return `
-ADD KEYSWITCH-PLAIN-${keySwitch}-${keyWidth}U${suffix} ${label} (${switchPos[0].toFixed(
-        2
-      )} ${switchPos[1].toFixed(2)});
-ADD ${diode} D${label} R90 (${diodePos[0].toFixed(2)} ${diodePos[1].toFixed(
-        2
-      )});
-${nets.join('')}`;
+      return lines;
     })
     .join('');
 
-  return `${preamble}${main}${labels.join('')}${footer}`;
+  return `${header}${switches}${diodes}${nets}${labels.join('')}${footer}`;
 };
 
-export const getBoardScript = (keyboard) => {
-  const diodeOffset = 2;
-  const switchOffset = 19.05;
-
-  if (!keyboard.keys.length) {
-    throw new Error('No keys on keyboard!');
-  }
-
-  const preamble = `
+export const getBoardScript = ({ keys }) => {
+  const header = `
 GRID ON;
 GRID MM 0.79375 24;
 GRID ALT MM .1;
 `;
 
-  const labelMap = new Map();
-  const main = keyboard.keys
-    .map((key) => {
-      const label = getLabel(key, labelMap);
-      const { x, y, width, height } = key;
-      const switchPos = [x * switchOffset, y * -switchOffset];
-
-      if (width > 1) {
-        switchPos[0] += (switchOffset * (width - 1)) / 2;
-      }
-
-      if (height > 1) {
-        switchPos[1] -= (switchOffset * (height - 1)) / 2;
-      }
-
-      const diodePos = [
-        switchPos[0] - (width * switchOffset) / 2,
-        switchPos[1] + diodeOffset
-      ];
-
-      return `
-ROTATE =R0 ${label};
-MIRROR ${label};
-MOVE ${label} (${switchPos[0].toFixed(2)} ${switchPos[1].toFixed(2)});
-ROTATE =R90 D${label};
-MOVE D${label} (${diodePos[0].toFixed(2)} ${diodePos[1].toFixed(2)});
-`;
-    })
+  const switches = keys
+    .map(({ label, positions }) => placeSwitch(label, positions.switch.board))
+    .join('');
+  const diodes = keys
+    .map(({ label, positions }) => placeDiode(label, positions.diode.board))
     .join('');
 
   const footer = `
@@ -302,5 +359,5 @@ RATSNEST;
 WINDOW FIT;
 `;
 
-  return `${preamble}${main}${footer}`;
+  return `${header}${switches}${diodes}${footer}`;
 };

@@ -6,7 +6,8 @@ import {
   diodes,
   getBoardScript,
   getSchematicScript,
-  keySwitches
+  keySwitches,
+  parseLayout
 } from './modules/eagle.js';
 import { parseKleFile } from './modules/kle.js';
 import { getLogger } from './modules/logging.js';
@@ -35,11 +36,13 @@ program
       log.info(`Parsing ${input}`);
 
       const keyboard = await parseKleFile(input);
+      const layout = parseLayout(keyboard, options);
+      const schematicScript = getSchematicScript(layout);
+      const boardScript = getBoardScript(layout);
 
-      const schematicScript = getSchematicScript(keyboard, options);
-      const boardScript = getBoardScript(keyboard);
-
+      log.info('Creating schematic script');
       await writeFile(outputSchematic, schematicScript);
+      log.info('Creating board script');
       await writeFile(outputBoard, boardScript);
     } catch (error) {
       log.error(error.message);
