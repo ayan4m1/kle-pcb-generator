@@ -146,7 +146,7 @@ const generateSwitch = (keySwitch, height, width, label, position) => {
 
   let suffix = '';
 
-  if (height > 1) {
+  if (height >= 2) {
     keyWidth = height;
     suffix = '-ROTATED';
   }
