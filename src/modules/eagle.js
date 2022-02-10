@@ -197,11 +197,32 @@ export const parseLayout = (keyboard, options) => {
     throw new Error('Invalid key switch specified!');
   }
 
+  let lastX = 0,
+    lastY = 0,
+    lastKey = { x: 0, y: 0 };
+
   const labelMap = new Map();
   const keys = keyboard.keys.map((key) => {
+    const label = getLabel(key, labelMap);
+    const deltaX = lastKey.x - key.x;
+    const deltaY = lastKey.y - key.y;
+
+    if (deltaY < 0) {
+      lastY++;
+      lastX = 0;
+    }
+
+    if (deltaY === 0 && deltaX < 0) {
+      lastX++;
+    }
+
+    lastKey = key;
+
     return {
       key,
-      label: getLabel(key, labelMap),
+      row: lastY + 1,
+      col: lastX + 1,
+      label,
       positions: calcPositions(key, options)
     };
   });
@@ -247,10 +268,8 @@ WINDOW FIT;
 
   const labels = [];
   const nets = keys
-    .flatMap(({ key: { x, y }, positions }) => {
+    .flatMap(({ row, col, positions }) => {
       const lines = [];
-      const row = Math.floor(y) + 1;
-      const col = Math.floor(x) + 1;
       const switchPos = positions.switch.schematic;
       const diodePos = positions.diode.schematic;
 
