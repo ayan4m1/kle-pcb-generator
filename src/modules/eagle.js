@@ -106,17 +106,6 @@ const calcPositions = ({ x, y, width, height }, options) => {
       (offsets.switch.schematic[1] * (height - 1)) / 2;
   }
 
-  positions.diode = {
-    board: [
-      positions.switch.board[0] - (width * offsets.switch.board) / 2,
-      positions.switch.board[1] + offsets.diode.board
-    ],
-    schematic: [
-      positions.switch.schematic[0] + offsets.diode.schematic[0],
-      positions.switch.schematic[1] + offsets.diode.schematic[1]
-    ]
-  };
-
   positions.switch.schematic[0] = parseFloat(
     positions.switch.schematic[0].toPrecision(2)
   );
@@ -131,6 +120,17 @@ const calcPositions = ({ x, y, width, height }, options) => {
   if (height > 1) {
     positions.switch.board[1] -= (offsets.switch.board * (height - 1)) / 2;
   }
+
+  positions.diode = {
+    board: [
+      positions.switch.board[0] - (width * offsets.switch.board) / 2,
+      positions.switch.board[1] + offsets.diode.board
+    ],
+    schematic: [
+      positions.switch.schematic[0] + offsets.diode.schematic[0],
+      positions.switch.schematic[1] + offsets.diode.schematic[1]
+    ]
+  };
 
   return positions;
 };
