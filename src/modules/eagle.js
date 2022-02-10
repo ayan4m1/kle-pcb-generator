@@ -43,15 +43,15 @@ keySwitches.set('mxHs', 'MXHS');
 keySwitches.set('mxHsPcb', 'MXHSPCB');
 
 const getLabel = (key, labels) => {
-  if (!key.labels.length) {
-    if (key.width >= 3) {
-      return 'SPACE';
-    }
+  let label;
 
-    throw new Error(`Unable to map key with no label at XY ${key.x} ${key.y}`);
+  if (key.labels.length) {
+    label = key.labels[key.labels.length - 1].toUpperCase();
+  } else if (key.width >= 3) {
+    label = 'SPACE';
+  } else {
+    label = 'BLANK';
   }
-
-  let label = key.labels[key.labels.length - 1].toUpperCase();
 
   if (keyMap.has(label)) {
     label = keyMap.get(label);
